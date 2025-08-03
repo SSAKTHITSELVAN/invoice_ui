@@ -121,7 +121,7 @@ const AIChatBox = () => {
     return (
         <>
 
-            <div className='fixed bottom-4 md:bottom-5 left-10 right-4 md:left-50 md:right-0 flex justify-center items-center z-50 px-4'>
+            <div className='fixed bottom-4 md:bottom-5 left-2 right-2 md:left-50 md:right-0 flex justify-center items-center z-50 px-0 md:px-4'>
                 {showChat && (
                     <div className="absolute bottom-12 md:bottom-18 left-0 right-0 w-full max-w-2xl mx-auto">
                         {/* Chat Space Container */}
@@ -247,7 +247,7 @@ const AIChatBox = () => {
                                     onClick={handleSend}
                                     disabled={!text.trim()}
                                     className='
-                  ml-2 md:ml-4 w-8 h-8 md:w-10 md:h-10 
+                  ml-0 md:ml-4 w-8 h-8 md:w-10 md:h-10 
                   bg-gradient-to-r from-cyan-500 to-blue-600 
                   hover:from-cyan-400 hover:to-blue-500
                   disabled:from-gray-600 disabled:to-gray-700
