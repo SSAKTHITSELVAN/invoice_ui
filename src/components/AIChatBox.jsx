@@ -123,7 +123,7 @@ const AIChatBox = () => {
 
             <div className='fixed bottom-4 md:bottom-5 left-2 right-2 md:left-50 md:right-0 flex justify-center items-center z-50 px-0 md:px-4'>
                 {showChat && (
-                    <div className="absolute bottom-12 md:bottom-18 left-0 right-0 w-full max-w-2xl mx-auto">
+                    <div className="absolute bottom-12 md:bottom-18 left-0 right-0 z-[9999] w-full max-w-2xl mx-auto">
                         {/* Chat Space Container */}
                         <div className="bg-gradient-to-b from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl rounded-2xl border border-cyan-400/30 shadow-2xl shadow-cyan-500/20 max-h-96 overflow-hidden">
                             {/* Header */}
