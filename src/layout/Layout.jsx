@@ -5,7 +5,7 @@ import Home from '../pages/Home';
 import Header from '../components/Header';
 import SideBar from '../components/SideBar';
 import DataContext from '../context/DataContest';
-import Login from '../pages/login/login';
+import Login from '../pages/login/Login';
 import Companies from '../pages/Companies';
 import CompanyForm from '../components/CompanyForm';
 import CompanyDetail from '../components/CompanyDetail';
