@@ -1,5 +1,5 @@
 import React, { useContext } from 'react'
-import SignUp from '../pages/login/signUp';
+import SignUp from '../pages/login/SignUp';
 import { Routes, Route, useLocation } from 'react-router-dom'
 import Home from '../pages/Home';
 import Header from '../components/Header';
