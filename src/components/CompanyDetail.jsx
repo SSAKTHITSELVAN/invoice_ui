@@ -15,21 +15,21 @@ const CompanyDetail = () => {
     // const company = yourCompanies[0];
 
     // delete
-    const handleDeleteCompany = async (id) => {
-        let isOk = await deleteAlert()
-        if (isOk) {
-            try {
-                await api.delete(`companies/${id}`);
-                navigate('/companies')
-            } catch (e) {
-                if (e.response && e.response.data) {
-                    console.log("Error in Delete Company : ", e.response.data)
-                } else {
-                    alert("Server Error in Delete Company : ", e);
-                }
-            }
-        }
-    }
+    // const handleDeleteCompany = async (id) => {
+    //     let isOk = await deleteAlert()
+    //     if (isOk) {
+    //         try {
+    //             await api.delete(`companies/${id}`);
+    //             navigate('/companies')
+    //         } catch (e) {
+    //             if (e.response && e.response.data) {
+    //                 console.log("Error in Delete Company : ", e.response.data)
+    //             } else {
+    //                 alert("Server Error in Delete Company : ", e);
+    //             }
+    //         }
+    //     }
+    // }
 
     if (!company) {
         return (
@@ -85,7 +85,22 @@ const CompanyDetail = () => {
                         <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-4">
                                 <div className="bg-white/20 p-3 rounded-xl">
-                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    {company.company_logo ? (
+                                        <img 
+                                            src={company.company_logo} 
+                                            alt={`${company.company_name} Logo`}
+                                            className="w-8 h-8 object-contain"
+                                            onError={(e) => {
+                                                e.target.style.display = 'none';
+                                            }}
+                                        />
+                                    ) : null}
+                                    <svg 
+                                        className={`w-8 h-8 ${company.company_logo ? 'hidden' : 'block'}`} 
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                    >
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                     </svg>
                                 </div>
@@ -125,6 +140,39 @@ const CompanyDetail = () => {
                                             </div>
                                         </div>
                                     </div>
+
+                                    {company.company_logo && (
+                                        <div className="model-details-content-div">
+                                            <div className="flex items-start space-x-3">
+                                                <svg className="model-details-content-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                                <div className="flex-1">
+                                                    <p className="font-medium text-gray-700 mb-3">Company Logo</p>
+                                                    <div className="bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-200">
+                                                        <img 
+                                                            src={company.company_logo} 
+                                                            alt={`${company.company_name} Logo`}
+                                                            className="max-w-32 max-h-32 object-contain mx-auto"
+                                                            onError={(e) => {
+                                                                e.target.style.display = 'none';
+                                                                e.target.nextSibling.style.display = 'flex';
+                                                            }}
+                                                        />
+                                                        <div className="hidden items-center justify-center py-8 text-gray-400">
+                                                            <svg className="w-8 h-8 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                            <span>Logo failed to load</span>
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-xs text-gray-500 mt-2">
+                                                        {company.company_logo.startsWith('data:') ? 'Data URL (Base64)' : 'External URL'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     <div className="model-details-content-div ">
                                         <div className="flex items-start space-x-3">
@@ -298,13 +346,13 @@ const CompanyDetail = () => {
                                 <span>Back</span>
                             </button>
 
-                            <button
+                            {/* <button
                                 onClick={() => handleDeleteCompany(company.company_id)}
                                 className='model-details-actions-delete '
                             >
                                 <img src={deleteI} className='w-5 h-5' alt="delete" />
                                 <span>Delete</span>
-                            </button>
+                            </button> */}
 
                             <button
                                 onClick={() => navigate(`/companyForm/${company.company_id}`)}

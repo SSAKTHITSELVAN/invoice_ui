@@ -2,15 +2,17 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { Building2, Mail, CreditCard, MapPin, Hash, Award, Landmark, User, GitBranch, Code } from 'lucide-react';
+import { Building2, Mail, CreditCard, MapPin, Hash, Award, Landmark, User, GitBranch, Code, Image, X } from 'lucide-react';
 import DataContext from '../context/DataContest';
 import { api } from '../API/api';
 import { useParams } from 'react-router-dom';
 import indiaStateCities from '../data/indiaStateCities.js';
+import ImgToURL from '../hooks/ImgToURL.jsx';
 
 const CompanyForm = ({ editMode = false }) => {
   const { navigate, fetchCompany, userDetails, yourCompanies, Toast } = useContext(DataContext);
   const [editCompanyData, setEditCompanyData] = useState(null);
+  const [showImgToURLPopup, setShowImgToURLPopup] = useState(false);
   const { id } = useParams();
 
   const [selectedState, setSelectedState] = useState("");
@@ -40,6 +42,7 @@ const CompanyForm = ({ editMode = false }) => {
       company_gstin: '',
       company_msme: '',
       company_email: '',
+      company_logo: '',
       company_bank_account_no: '',
       company_bank_name: '',
       company_account_holder: '',
@@ -73,10 +76,11 @@ const CompanyForm = ({ editMode = false }) => {
             });
           } else {
             console.log("posting..");
-            await api.post("/companies", {
+            const res = await api.post("/companies", {
               ...values,
               company_owner: userDetails.user_id,
             });
+            console.log("Posting Response: ", res);
             Toast.fire({
               icon: "success",
               title: "Successfully company created"
@@ -88,10 +92,14 @@ const CompanyForm = ({ editMode = false }) => {
           navigate("/companies");
         } catch (e) {
           setSubmitting(false);
-          if (e.response && e.response.data) {
-            setFieldError(e.response?.data?.detail[0]?.loc[1] || 'company_ifsc_code', e.response?.data?.detail[0].msg || "Invalid data , check again!");
+          if (e.response && e.response.data && Array.isArray(e.response.data.detail) && e.response.data.detail.length > 0) {
+            const detail = e.response.data.detail[0];
+            const field = (detail.loc && detail.loc.length > 1) ? detail.loc[1] : 'company_ifsc_code';
+            const msg = detail.msg || "Invalid data, check again!";
+            setFieldError(field, msg);
             console.error("Company Save Error: ", e.response.data);
           } else {
+            setFieldError('company_ifsc_code', "Invalid data, check again!");
             alert("Server Error: " + e.message);
           }
         }
@@ -140,6 +148,7 @@ const CompanyForm = ({ editMode = false }) => {
       company_gstin: <Hash className="w-5 h-5" />,
       company_msme: <Award className="w-5 h-5" />,
       company_email: <Mail className="w-5 h-5" />,
+      company_logo: <Image className="w-5 h-5" />,
       company_bank_account_no: <CreditCard className="w-5 h-5" />,
       company_bank_name: <Landmark className="w-5 h-5" />,
       company_account_holder: <User className="w-5 h-5" />,
@@ -164,6 +173,7 @@ const CompanyForm = ({ editMode = false }) => {
       company_gstin: 'Enter GSTIN number',
       company_msme: 'Enter MSME registration number',
       company_email: 'Enter company email address',
+      company_logo: 'Enter company logo URL or click to generate',
       company_bank_account_no: 'Enter bank account number',
       company_bank_name: 'Enter bank name',
       company_account_holder: 'Enter account holder name',
@@ -177,7 +187,7 @@ const CompanyForm = ({ editMode = false }) => {
     {
       title: 'Company Information',
       icon: <Building2 className="w-5 h-5" />,
-      fields: ['company_name', 'company_address', 'company_state', 'company_city',  'company_email']   
+      fields: ['company_name', 'company_address', 'company_state', 'company_city', 'company_email', 'company_logo']
     },
     {
       title: 'Registration Details',
@@ -230,7 +240,7 @@ const CompanyForm = ({ editMode = false }) => {
                       >
                         <label htmlFor={key} className="text-sm font-medium text-gray-700 mb-2">
                           {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                          <span className="text-red-500 ml-1">*</span>
+                          {key !== 'company_logo' && <span className="text-red-500 ml-1">*</span>}
                         </label>
 
                         {key === 'company_state' ? (
@@ -282,6 +292,57 @@ const CompanyForm = ({ editMode = false }) => {
                               ))}
                             </select>
                           </div>
+                        ) : key === 'company_logo' ? (
+                          <div className="space-y-2">
+                            <div className="relative">
+                              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                {getFieldIcon(key)}
+                              </div>
+                              <input
+                                id={key}
+                                name={key}
+                                type="url"
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                value={formik.values[key]}
+                                placeholder={getFieldPlaceholder(key)}
+                                className={`model-form-field ${formik.touched[key] && formik.errors[key]
+                                  ? 'border-red-300 focus:border-red-500'
+                                  : 'border-gray-200 focus:border-blue-500 hover:border-gray-300'
+                                  }`}
+                              />
+                            </div>
+                            {!formik.values[key] && (
+                              <button
+                                type="button"
+                                onClick={() => setShowImgToURLPopup(true)}
+                                className="w-full py-2 px-4 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center space-x-2"
+                              >
+                                <Image className="w-4 h-4" />
+                                <span>Generate Image URL</span>
+                              </button>
+                            )}
+                            {formik.values[key] && (
+                              <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg">
+                                <img 
+                                  src={formik.values[key]} 
+                                  alt="Company Logo Preview" 
+                                  className="w-12 h-12 object-contain rounded border"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                  }}
+                                />
+                                <span className="text-sm text-gray-600 flex-1">Logo preview</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowImgToURLPopup(true)}
+                                  className="text-blue-500 hover:text-blue-700 text-sm"
+                                >
+                                  Change
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         ) : (
                           <div className="relative">
                             <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
@@ -319,14 +380,19 @@ const CompanyForm = ({ editMode = false }) => {
                 >
                   Cancel
                 </button>
+              
                 <button
                   type="submit"
-                  disabled={!formik.isValid || formik.isSubmitting}
-                  className="model-form-actions-submit"
+                  disabled={
+                    !formik.isValid ||
+                    formik.isSubmitting ||
+                    Object.keys(formik.errors).length > 0
+                  }
+                  className={`model-form-actions-submit  ${Object.keys(formik.errors).length > 0 ? 'border-2 border-red-500' : ''}`}
                 >
                   {formik.isSubmitting ? (
                     <div className="flex items-center justify-center space-x-2">
-                      <div className=" model-form-actions-submiting"></div>
+                      <div className="model-form-actions-submiting"></div>
                       <span>Processing...</span>
                     </div>
                   ) : (
@@ -338,6 +404,31 @@ const CompanyForm = ({ editMode = false }) => {
           </div>
         </div>
       </div>
+
+      {/* ImgToURL Popup Modal */}
+      {showImgToURLPopup && (
+        <div className="fixed inset-0 backdrop-blur border bg-opacity-50 flex items-center justify-center z-9999 p-4">
+          <div className="bg-white shadow-2xl border border-blue-600 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-800">Generate Company Logo URL</h3>
+              <button
+                onClick={() => setShowImgToURLPopup(false)}
+                className="text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-4">
+              <ImgToURL 
+                onImageGenerated={(url) => {
+                  formik.setFieldValue('company_logo', url);
+                  setShowImgToURLPopup(false);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

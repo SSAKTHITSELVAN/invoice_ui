@@ -7,9 +7,10 @@ import { Eye, EyeOff } from 'lucide-react';
 
 const ChangePassword = () => {
 
-    const { navigate, userDetails, token, Toast , setLoginPage } = useContext(DataContext);
+    const { navigate, userDetails, token, Toast, setLoginPage } = useContext(DataContext);
 
     const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const formik = useFormik({
         initialValues: {
@@ -30,6 +31,7 @@ const ChangePassword = () => {
         }),
         onSubmit: (values, { setFieldError }) => {
             const putUser = async (userID) => {
+                setIsLoading(true);
                 try {
                     await api.put(`users/${userID}`, { user_name: values.user_name, password: values.newPassword }, {
                         headers: {
@@ -40,6 +42,12 @@ const ChangePassword = () => {
                         icon: "success",
                         title: "Successfully userdetail updated"
                     });
+                    setLoginPage({
+                        isActive: true,
+                        isLogined: false
+                    });
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("userDetails");
                     navigate("/");
                 } catch (e) {
                     if (e.response && e.response.data) {
@@ -53,6 +61,9 @@ const ChangePassword = () => {
                         setFieldError("user_name", "Server error. Try again later.");
                     }
                 }
+                finally {
+                    setIsLoading(false);
+                }
 
             }
             putUser(userDetails.user_id);
@@ -61,7 +72,7 @@ const ChangePassword = () => {
 
 
     return (
-        <div className="place-content-center place-items-center py-5">
+        <div className="place-content-center place-items-center py-8 md:py-20">
 
             <form onSubmit={formik.handleSubmit} className='login-form' >
                 <div className='w-full text-center  -mt-4 '>
@@ -123,18 +134,26 @@ const ChangePassword = () => {
                     ) : null}
                 </div>
 
-                <button type="submit" className='btn-1  mt-1'>
-                    Change Password
+                <button
+                    type="submit"
+                    className='btn-1 mt-1 flex items-center justify-center gap-2'
+                    disabled={isLoading}
+                >
+                    {isLoading && (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    )}
+                    {isLoading ? 'Changing...' : 'Change Password'}
                 </button>
             </form>
 
-            <h4><button className='back h-2' onClick={() => {
+            <h4>Go To <button className='back mt-4' onClick={() => {
                 navigate('/home');
                 setLoginPage({
                     isActive: false,
                     isLogined: true
                 })
-            }}>Back</button> / Go to<button className='px-2 btn-1  mt-5' onClick={() => navigate('/')}>login</button></h4>
+            }}>Back</button>
+            </h4>
         </div>
     );
 };

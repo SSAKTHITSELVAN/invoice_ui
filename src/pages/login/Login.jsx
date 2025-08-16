@@ -12,6 +12,7 @@ const Login = () => {
   const { setLoginPage, setToken, setuserDetails, initDataLoad, Toast } = useContext(DataContext);
 
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
 
   const formik = useFormik({
@@ -30,6 +31,7 @@ const Login = () => {
     onSubmit: (values, { setFieldError }) => {
 
       const postUser = async () => {
+        setIsLoading(true);
         try {
           const res = await api.post("users/login", { ...values });
           if (res.data.access_token) {
@@ -44,13 +46,13 @@ const Login = () => {
             icon: "success",
             title: "Logined successfully"
           });
-          
-          initDataLoad();
-          navigate("/home");
+
           setLoginPage({
             isActive: false,
             isLogined: true
           })
+          navigate("/home");
+          initDataLoad();
 
         } catch (e) {
           if (e.response) {
@@ -68,6 +70,8 @@ const Login = () => {
             console.log("Request error:", e.message);
             alert("Something went wrong!, Try again");
           }
+        } finally {
+          setIsLoading(false);
         }
       };
 
@@ -77,7 +81,7 @@ const Login = () => {
   });
 
   return (
-    <div className='place-content-center place-items-center py-5'>
+    <div className='place-content-center place-items-center py-5 md:py-10'>
 
       <h2 className='login-title'>Welcome Back 😊</h2>
 
@@ -128,7 +132,16 @@ const Login = () => {
         onClick={() => navigate('/changePassword')}
         className='cursor-pointer hover:underline hover:text-blue-700'>username/password</a> ?</p> */}
 
-        <button type="submit" className='btn-1  mt-1'>Login</button>
+        <button 
+          type="submit" 
+          className='btn-1 mt-1 flex items-center justify-center gap-2' 
+          disabled={isLoading}
+        >
+          {isLoading && (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          )}
+          {isLoading ? 'Logging in...' : 'Login'}
+        </button>
       </form>
 
       <h4>I don't have account, click to <button className='px-2 btn-1  mt-5' onClick={() => navigate('/signup')}>SignUp</button></h4>

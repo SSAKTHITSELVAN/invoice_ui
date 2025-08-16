@@ -1,7 +1,12 @@
 import axios from 'axios';
 
 export const api = axios.create({
-  baseURL: 'http://13.60.193.136:8000/api',
+  // baseURL: 'https://08abfbc34259.ngrok-free.app/api',
+  baseURL: 'http://localhost:8000/api',
+  headers: {
+    // This is the crucial header to add
+    'ngrok-skip-browser-warning': 'true'
+  }
 });
 
 let token = null;

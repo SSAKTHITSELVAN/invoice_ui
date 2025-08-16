@@ -2,6 +2,7 @@ import React, { createContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, setBearerToken } from '../API/api';
 import Swal from 'sweetalert2'
+import { setupAutoLogout } from '../API/auth';
 
 const DataContext = createContext();
 
@@ -138,8 +139,8 @@ export const DataProvider = ({ children }) => {
 
     const initDataLoad = async () => {
         const companies = await fetchCompany();
-        if (companies.length > 0) {
-            const companyId = companies[0].company_id;
+        if (companies?.length > 0) {
+            const companyId = companies[0]?.company_id;
             await Promise.all([
                 fetchCustomers(companyId),
                 fetchProducts(companyId),
@@ -154,6 +155,7 @@ export const DataProvider = ({ children }) => {
         const userdetail = await localStorage.getItem("userDetail");
         if (tokenStr) {
             setToken(tokenStr);
+            // console.log("Token fetched from localStorage:", tokenStr);
             setLoginPage(
                 { isActive: false, isLogined: true }
             )
@@ -170,9 +172,46 @@ export const DataProvider = ({ children }) => {
 
     }
 
+    const checkTokenExpiry = () => {
+        const tokenStr = localStorage.getItem("token");
+        if (tokenStr) {
+            const isExpired = setupAutoLogout(tokenStr, navigate, setLoginPage, setToken, setYourCompanies, setYourProducts, setYourCustomers, setYourInvoices, Toast);
+            return isExpired;
+        }
+        return true; // No token means expired
+    };
+
     useEffect(() => {
-        fetchToken()
+        fetchToken();
     }, [])
+
+
+    // Auto logout setup - only run once when token changes
+    useEffect(() => {
+        if (token) {
+            setupAutoLogout(token, navigate, setLoginPage, setToken, setYourCompanies, setYourProducts, setYourCustomers, setYourInvoices, Toast);
+
+            // Check token on user activity
+            const checkOnActivity = () => {
+                checkTokenExpiry();
+            };
+
+            // Add event listeners for user activity
+            const events = ['click', 'keypress', 'scroll', 'mousemove', 'touchstart'];
+
+            events.forEach(event => {
+                document.addEventListener(event, checkOnActivity);
+            });
+
+            // Cleanup event listeners
+            return () => {
+                events.forEach(event => {
+                    document.removeEventListener(event, checkOnActivity);
+                });
+            };
+        }
+    }, [token]);
+
 
 
     const [isLoading, setIsLoading] = useState({
@@ -191,16 +230,13 @@ export const DataProvider = ({ children }) => {
 
     const [yourCompanies, setYourCompanies] = useState([]);
 
+
     const fetchCompany = async () => {
         try {
-            const res = await api.get("companies");
+            const res = await api.get("/companies");
+            // console.log("Get Companies Response : ", res);
             setYourCompanies(res.data.data);
             setIsLoading((p) => ({ ...p, company: false }))
-            await Promise.all([
-                fetchCustomers(res.data.data.company_id),
-                fetchProducts(res.data.data.company_id),
-                fetchInvoices(res.data.data.company_id),
-            ]);
             return res.data.data;
         } catch (e) {
             console.log("Get Companies Error : ", e);
@@ -220,6 +256,7 @@ export const DataProvider = ({ children }) => {
     const fetchProducts = async (cId) => {
         try {
             const res = await api.get(`companies/${cId}/products`);
+            // console.log("Get Products Response : ", res);
             setYourProducts(res.data.data);
             setIsLoading((p) => ({ ...p, product: false }));
         } catch (e) {
@@ -239,6 +276,7 @@ export const DataProvider = ({ children }) => {
     const fetchCustomers = async (cId) => {
         try {
             const res = await api.get(`companies/${cId}/customers/`);
+            // console.log("Get Customers Response : ", res);
             setYourCustomers(res.data.data);
             setIsLoading((p) => ({ ...p, customer: false }));
         } catch (e) {
@@ -259,6 +297,7 @@ export const DataProvider = ({ children }) => {
     const fetchInvoices = async (cId) => {
         try {
             const res = await api.get(`invoices?company_id=${cId}`);
+            // console.log("Get Invoices Response : ", res);
             setYourInvoices(res.data.data);
             setIsLoading((p) => ({ ...p, invoice: false }));
             await Promise.all([
@@ -271,6 +310,7 @@ export const DataProvider = ({ children }) => {
     }
 
     const [isEditing, setIsEditing] = useState(false);
+
 
 
     // -----------------------------
